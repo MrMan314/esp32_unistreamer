@@ -57,8 +57,6 @@
 #include "esp_camera_af.h"
 #endif
 
-//#define BOARD_WROVER_KIT 1
-
 #include "camera_pinout.h"
 #include "packet.h"
 
@@ -146,21 +144,6 @@ static void maybe_init_autofocus(void)
 #endif
 #endif
 
-/*
-uint8_t beacon_header[] = {
-	0x08, 0x00,							// 0-1: Frame Control
-	0x00, 0x00,							// 2-3: Duration
-	0x67, 0x41, 0x67, 0x41, 0x67, 0x41,				// 4-9: Destination address (broadcast)
-	0x67, 0x41, 0x67, 0x41, 0x67, 0x41,				// 4-9: Destination address (broadcast)
-	0x67, 0x41, 0x67, 0x41, 0x67, 0x41,				// 4-9: Destination address (broadcast)
-	0x00, 0x00,							// 22-23: Sequence / fragment number
-	0xAA, 0xAA, 0x03,						// 24-26: LLC
-	0x00, 0x00, 0x00,						// 27-28: OUI
-	0x88, 0xB5							// 29-30: custom protocol
-};
-*/
-
-
 packet_t packet = {0};
 uint8_t mac[] = {0x67, 0x41, 0x67, 0x41, 0x67, 0x41};
 uint8_t my_mac[6];
@@ -210,8 +193,8 @@ void app_main(void)
 
 	ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &ap_config));
 
-	ESP_ERROR_CHECK(esp_wifi_config_80211_tx_rate(WIFI_IF_AP, WIFI_PHY_RATE_54M));
-/*
+	ESP_ERROR_CHECK(esp_wifi_config_80211_tx_rate(WIFI_IF_AP, WIFI_PHY_RATE_24M));
+/** this code fails for some reason...
 	wifi_tx_rate_config_t tx_rate_config = {
 		.phymode = WIFI_PHY_MODE_HT40,
 		.rate = WIFI_PHY_RATE_MCS7_LGI,
@@ -277,11 +260,9 @@ void app_main(void)
 			if (xSemaphoreTake(tx_done_sem, pdMS_TO_TICKS(100)) != pdTRUE) {
 				ESP_LOGE(TAG, "transmission FAILED!");
 			}
-			//vTaskDelay(100 /  portTICK_RATE_MS);
 		}
 		//ESP_LOGI(TAG, "picture transmission done");
 		esp_camera_fb_return(pic);
-	//	vTaskDelay(5000 / portTICK_RATE_MS);
 		seq++;
 
 		vTaskDelayUntil(&xLastWakeTime, xFrequency);

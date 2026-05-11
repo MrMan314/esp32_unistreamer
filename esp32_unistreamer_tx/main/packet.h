@@ -14,9 +14,10 @@ typedef struct __attribute__((packed)) {
 	uint16_t order			: 1;
 } frame_control_t;
 
+// this however, is actually not the case (it is actually 4,12)
 typedef struct __attribute__((packed)) {
-	uint16_t fragment		: 4;
-	uint16_t sequence		: 12;
+	uint16_t fragment		: 8;
+	uint16_t sequence		: 8;
 } seq_ctrl_t;
 
 typedef struct __attribute__((packed)) {

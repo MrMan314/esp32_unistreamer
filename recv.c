@@ -33,11 +33,11 @@ void packet_handler(unsigned char *args, const struct pcap_pkthdr *header, const
 #if defined(LOG_MODE_HUMAN)
 					fprintf(stderr, "%d %d %d\n", prev_seq, buf_ptr - buf, prev_size);
 				} else {
-					fprintf(stderr, "%d short frame (%d/%d)\n", prev_seq, prev_frag, (prev_size + FRAG_SIZE - 1)/FRAG_SIZE);
+					fprintf(stderr, "%d short frame (%d/%d)\n", prev_seq, frag_count, (prev_size + FRAG_SIZE - 1)/FRAG_SIZE);
 #elif defined(LOG_MODE_CSV)
 					fprintf(stderr, "%d, 1\n", prev_seq);
 				} else {
-					fprintf(stderr, "%d, %lf\n", prev_seq, (double)prev_frag/((prev_size + FRAG_SIZE - 1)/FRAG_SIZE));
+					fprintf(stderr, "%d, %lf\n", prev_seq, (double)frag_count/((prev_size + FRAG_SIZE - 1)/FRAG_SIZE));
 #else
 				} else {
 #endif
@@ -45,7 +45,7 @@ void packet_handler(unsigned char *args, const struct pcap_pkthdr *header, const
 				}
 			} else {
 #if defined(LOG_MODE_HUMAN)
-				fprintf(stderr, "%d discontinuous frame (%d/%d)\n", cur_seq, frag_count, (prev_size + FRAG_SIZE - 1)/FRAG_SIZE);
+				fprintf(stderr, "%d discontinuous frame (%d/%d)\n", prev_seq, frag_count, (prev_size + FRAG_SIZE - 1)/FRAG_SIZE);
 #elif defined(LOG_MODE_CSV)
 				fprintf(stderr, "%d, %lf\n", cur_seq, (double)frag_count/((prev_size + FRAG_SIZE - 1)/FRAG_SIZE));
 #endif
@@ -54,11 +54,14 @@ void packet_handler(unsigned char *args, const struct pcap_pkthdr *header, const
 			prev_frag = -1;
 			packet_valid = 1;
 			buf_ptr = buf;
-			frag_count = 0;
+			frag_count = -1;
 		}
 
-		if (prev_frag + 1 != cur_frag) {
+		// juuuuust in case...
+		if ((prev_frag + 1)%256 != (cur_frag)%256) {
 			packet_valid = 0;
+			//fprintf(stderr, "%d jump %d-%d\n", cur_seq, prev_frag, cur_frag);
+			frag_count++;
 		} else {
 			memcpy(buf_ptr, image, FRAG_SIZE);
 			buf_ptr += FRAG_SIZE;
