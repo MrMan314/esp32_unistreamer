@@ -1,0 +1,31 @@
+dependencies:
+  espressif/esp32-camera:
+    dependencies:
+    - name: idf
+      version: '>=5.1'
+    - name: espressif/esp_jpeg
+      public: true
+      version: ^1.3.1
+    source:
+      path: /home/mrman/git-repos/esp32-camera
+      type: local
+    version: '*'
+  espressif/esp_jpeg:
+    component_hash: defb83669293cbf86d0fa86b475ba5517aceed04ed70db435388c151ab37b5d7
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=5.0'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 1.3.1
+  idf:
+    source:
+      type: idf
+    version: 6.1.0
+direct_dependencies:
+- espressif/esp32-camera
+manifest_hash: 9cdee4089e30aed12bc010bdc3c422ca2b3a7795cfc956a552af0e4734593bae
+target: esp32s3
+version: 2.0.0
