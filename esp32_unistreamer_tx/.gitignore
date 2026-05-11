@@ -5,3 +5,4 @@ sdkconfig.old
 main/build/
 
 managed_components/
+dependencies.lock

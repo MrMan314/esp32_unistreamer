@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <pcap.h>
 #include <string.h>
-#include "camera_example/main/packet.h"
+#include "esp32_unistreamer_tx/main/packet.h"
 
 char errbuf[PCAP_ERRBUF_SIZE];
 
