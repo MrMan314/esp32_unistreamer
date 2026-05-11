@@ -218,6 +218,8 @@ void app_main(void)
 	// In menuconfig: Component config → Camera configuration → Enable autofocus support
 	maybe_init_autofocus();
 #endif
+	sensor_t *s = esp_camera_sensor_get();
+	s->set_vflip(s, 1);
 
 	ESP_ERROR_CHECK(esp_read_mac(my_mac, ESP_MAC_WIFI_SOFTAP));
 

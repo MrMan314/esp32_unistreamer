@@ -14,7 +14,18 @@ char packet_valid = 0;
 uint8_t *buf, *buf_ptr, *prev_buf;
 int frag_count;
 
-#define LOG_MODE_HUMAN
+#define LOG_MODE_CSV
+
+#ifdef LOG_MODE_HUMAN
+#define LOG_ERROR_RATE(i, recv, total) fprintf(stderr, "%d broken (%d/%d)\n", i, recv, total);
+#define LOG_SUCCESS(i, recvsize, realsize) fprintf(stderr, "%d %d %d\n", i, recvsize, realsize);
+#elifdef LOG_MODE_CSV
+#define LOG_ERROR_RATE(i, recv, total) fprintf(stderr, "%d, %lf\n", i, (double)(recv)/(total));
+#define LOG_SUCCESS(i, recvsize, realsize) fprintf(stderr, "%d, 1\n", i);
+#else
+#define LOG_ERROR_RATE(i, recv, total)
+#define LOG_SUCCESS(i, recvsize, realsize)
+#endif
 
 void packet_handler(unsigned char *args, const struct pcap_pkthdr *header, const unsigned char *packet_ptr) {
 	packet_t *packet = (packet_t*) (packet_ptr + 18);
@@ -30,25 +41,13 @@ void packet_handler(unsigned char *args, const struct pcap_pkthdr *header, const
 					prev_buf_size = prev_size;
 					fwrite(buf, sizeof(uint8_t), prev_size, output_file);
 					memcpy(prev_buf, buf, prev_buf_size);
-#if defined(LOG_MODE_HUMAN)
-					fprintf(stderr, "%d %d %d\n", prev_seq, buf_ptr - buf, prev_size);
+					LOG_SUCCESS(prev_seq, buf_ptr - buf, prev_size);
 				} else {
-					fprintf(stderr, "%d short frame (%d/%d)\n", prev_seq, frag_count, (prev_size + FRAG_SIZE - 1)/FRAG_SIZE);
-#elif defined(LOG_MODE_CSV)
-					fprintf(stderr, "%d, 1\n", prev_seq);
-				} else {
-					fprintf(stderr, "%d, %lf\n", prev_seq, (double)frag_count/((prev_size + FRAG_SIZE - 1)/FRAG_SIZE));
-#else
-				} else {
-#endif
+					LOG_ERROR_RATE(prev_seq, frag_count, (prev_size + FRAG_SIZE - 1)/FRAG_SIZE);
 					fwrite(prev_buf, sizeof(uint8_t), prev_buf_size, output_file);
 				}
 			} else {
-#if defined(LOG_MODE_HUMAN)
-				fprintf(stderr, "%d discontinuous frame (%d/%d)\n", prev_seq, frag_count, (prev_size + FRAG_SIZE - 1)/FRAG_SIZE);
-#elif defined(LOG_MODE_CSV)
-				fprintf(stderr, "%d, %lf\n", cur_seq, (double)frag_count/((prev_size + FRAG_SIZE - 1)/FRAG_SIZE));
-#endif
+				LOG_ERROR_RATE(prev_seq, frag_count, (prev_size + FRAG_SIZE - 1)/FRAG_SIZE);
 				fwrite(prev_buf, sizeof(uint8_t), prev_buf_size, output_file);
 			}
 			prev_frag = -1;
