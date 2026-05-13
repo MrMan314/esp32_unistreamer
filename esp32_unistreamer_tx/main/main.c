@@ -59,6 +59,10 @@
 
 #include "camera_pinout.h"
 #include "packet.h"
+#include "gf256.h"
+
+#define CEIL_DIV(a, b) (((a) + (b) - 1) / (b))
+#define FEC_RATE 3
 
 extern int ieee80211_raw_frame_sanity_check(int32_t arg, int32_t arg2, int32_t arg3){
 	// looks good...
@@ -248,16 +252,41 @@ void app_main(void)
 		//ESP_LOGI(TAG, "Taking picture...");
 		camera_fb_t *pic = esp_camera_fb_get();
 
-		// use pic->buf to access the image
 		ESP_LOGI(TAG, "Picture taken! Its size was: %zu bytes", pic->len);
 
-		for (int i = 0, frag=0; i < pic->len; i += DATA_SIZE - 4, frag++) {
+		packet.packet_header.header.seq_ctrl.sequence = seq;
+		packet.frame_len = pic->len;
 
-			packet.packet_header.header.seq_ctrl.sequence = seq;
+		int n_packets = CEIL_DIV(pic->len, DATA_SIZE);
+		int n_parity = CEIL_DIV(n_packets, FEC_RATE);
+
+		uint8_t *parity_data = malloc(n_parity * DATA_SIZE);
+
+		// compute parity
+		for (int i = 0; i < DATA_SIZE; i++) {
+			uint8_t poly[n_packets];
+			gf_polyreg(pic->buf + i, n_packets, poly, DATA_SIZE);
+			for (int j = 0; j < n_parity; j++) {
+				parity_data[DATA_SIZE * j + i] = gf256_polycalc(poly, n_packets, j + n_packets);
+			}
+		}
+
+		int frag = 0;
+		for (int i = 0; i < pic->len; i += DATA_SIZE, frag++) {
+
 			packet.packet_header.header.seq_ctrl.fragment = frag;
 
-			memcpy(packet.data, &pic->len, 4);
-			memcpy(packet.data + 4, pic->buf + i, DATA_SIZE - 4);
+			memcpy(packet.data, pic->buf + i, DATA_SIZE);
+			ESP_ERROR_CHECK(esp_wifi_80211_tx(WIFI_IF_AP, &packet, sizeof(packet_t), false));
+			if (xSemaphoreTake(tx_done_sem, pdMS_TO_TICKS(100)) != pdTRUE) {
+				ESP_LOGE(TAG, "transmission FAILED!");
+			}
+		}
+
+		// transmit parity
+		for (int i = 0; i < n_parity; i++, frag++) {
+			packet.packet_header.header.seq_ctrl.fragment = frag;
+			memcpy(packet.data, parity_data + i * DATA_SIZE, DATA_SIZE);
 			ESP_ERROR_CHECK(esp_wifi_80211_tx(WIFI_IF_AP, &packet, sizeof(packet_t), false));
 			if (xSemaphoreTake(tx_done_sem, pdMS_TO_TICKS(100)) != pdTRUE) {
 				ESP_LOGE(TAG, "transmission FAILED!");

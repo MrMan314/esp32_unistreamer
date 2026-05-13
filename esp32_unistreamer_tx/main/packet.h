@@ -48,9 +48,10 @@ typedef struct __attribute__((packed)) {
 	llc_snap_header_t snap_header;
 } packet_header_t;
 
-#define DATA_SIZE (2328-sizeof(packet_header_t))
+#define DATA_SIZE (2328-sizeof(packet_header_t) - 4)
 
 typedef struct __attribute__((packed)) {
 	packet_header_t packet_header;
+	int frame_len;
 	uint8_t data[DATA_SIZE];
 } packet_t;

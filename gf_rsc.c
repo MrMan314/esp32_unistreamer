@@ -13,7 +13,7 @@ int main() {
 
 	// generation
 	uint8_t code[size];
-	gf_polyreg(s, size, code);
+	gf_polyreg(s, size, code, 1);
 
 	// determine parity bytes
 	uint8_t recv[size + eccsize];
@@ -33,7 +33,7 @@ int main() {
 
 	// simulate packet loss
 	uint8_t indices[] = {2, 4, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 19};
-	gf_polyreg_indexed(recv, indices, size, code);
+	gf_polyreg_indexed(recv, indices, size, code, 1);
 
 	uint8_t recover[size];
 

@@ -12,7 +12,7 @@ uint8_t gf256_pow(uint8_t b, uint8_t exp);
 
 uint8_t gf256_polycalc(uint8_t poly[], int len, uint8_t x);
 
-void gf_polyreg(uint8_t data[], uint8_t i_size, uint8_t out[]);
-void gf_polyreg_indexed(uint8_t data[], uint8_t indices[], uint8_t i_size, uint8_t out[]);
+void gf_polyreg(uint8_t data[], uint8_t i_size, uint8_t out[], int frame_size);
+void gf_polyreg_indexed(uint8_t data[], uint8_t indices[], uint8_t i_size, uint8_t out[], int frame_size);
 
 #endif

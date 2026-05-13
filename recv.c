@@ -10,7 +10,6 @@ FILE *output_file;
 uint8_t target_mac[] = {0x67, 0x41, 0x67, 0x41, 0x67, 0x41};
 int prev_seq, prev_frag, prev_size, prev_buf_size;
 char packet_valid = 0;
-#define FRAG_SIZE (DATA_SIZE - 4)
 uint8_t *buf, *buf_ptr, *prev_buf;
 int frag_count;
 
@@ -32,8 +31,8 @@ void packet_handler(unsigned char *args, const struct pcap_pkthdr *header, const
 	if (!strncmp(target_mac, packet->packet_header.header.dest_addr, sizeof(target_mac))) {
 		int cur_seq = packet->packet_header.header.seq_ctrl.sequence;
 		int cur_frag = packet->packet_header.header.seq_ctrl.fragment;
-		int *cur_size = (int*)packet->data;
-		uint8_t *image = packet->data + 4;
+		int cur_size = packet->frame_len;
+		uint8_t *image = packet->data;
 
 		if (cur_seq != prev_seq) {
 			if (packet_valid) {
@@ -43,11 +42,11 @@ void packet_handler(unsigned char *args, const struct pcap_pkthdr *header, const
 					memcpy(prev_buf, buf, prev_buf_size);
 					LOG_SUCCESS(prev_seq, buf_ptr - buf, prev_size);
 				} else {
-					LOG_ERROR_RATE(prev_seq, frag_count, (prev_size + FRAG_SIZE - 1)/FRAG_SIZE);
+					LOG_ERROR_RATE(prev_seq, frag_count, (prev_size + DATA_SIZE - 1)/DATA_SIZE);
 					fwrite(prev_buf, sizeof(uint8_t), prev_buf_size, output_file);
 				}
 			} else {
-				LOG_ERROR_RATE(prev_seq, frag_count, (prev_size + FRAG_SIZE - 1)/FRAG_SIZE);
+				LOG_ERROR_RATE(prev_seq, frag_count, (prev_size + DATA_SIZE - 1)/DATA_SIZE);
 				fwrite(prev_buf, sizeof(uint8_t), prev_buf_size, output_file);
 			}
 			prev_frag = -1;
@@ -62,14 +61,14 @@ void packet_handler(unsigned char *args, const struct pcap_pkthdr *header, const
 			//fprintf(stderr, "%d jump %d-%d\n", cur_seq, prev_frag, cur_frag);
 			frag_count++;
 		} else {
-			memcpy(buf_ptr, image, FRAG_SIZE);
-			buf_ptr += FRAG_SIZE;
+			memcpy(buf_ptr, image, DATA_SIZE);
+			buf_ptr += DATA_SIZE;
 		}
 		frag_count++;
 
 		prev_seq = cur_seq;
 		prev_frag = cur_frag;
-		prev_size = *cur_size;
+		prev_size = cur_size;
 	}
 }
 

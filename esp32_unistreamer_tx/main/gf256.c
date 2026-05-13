@@ -33,7 +33,7 @@ uint8_t gf256_polycalc(uint8_t poly[], int len, uint8_t x) {
 	return res;
 }
 
-void gf_polyreg(uint8_t data[], uint8_t i_size, uint8_t out[]) {
+void gf_polyreg(uint8_t data[], uint8_t i_size, uint8_t out[], int frame_size) {
 	bzero(out, i_size);
 	for (uint8_t i = 0; i < i_size; i++) {
 
@@ -45,7 +45,7 @@ void gf_polyreg(uint8_t data[], uint8_t i_size, uint8_t out[]) {
 		}
 
 		// compute coefficient = GF(256)[x]/p(x)
-		uint8_t coeff = gf256_mul[data[i]][gf256_inverse[gf256_polycalc(poly, i_size, i)]];
+		uint8_t coeff = gf256_mul[data[i * frame_size]][gf256_inverse[gf256_polycalc(poly, i_size, i)]];
 
 		// accumulate regressed polynomial
 		for (uint8_t j = i_size; j--;) {
@@ -54,7 +54,7 @@ void gf_polyreg(uint8_t data[], uint8_t i_size, uint8_t out[]) {
 	}
 }
 
-void gf_polyreg_indexed(uint8_t data[], uint8_t indices[], uint8_t i_size, uint8_t out[]) {
+void gf_polyreg_indexed(uint8_t data[], uint8_t indices[], uint8_t i_size, uint8_t out[], int frame_size) {
 	bzero(out, i_size);
 	// index from indices
 	for (uint8_t *i = indices; i < indices + i_size; i++) {
@@ -64,7 +64,7 @@ void gf_polyreg_indexed(uint8_t data[], uint8_t indices[], uint8_t i_size, uint8
 			if (j != i) poly_mul(poly, i_size, *j);
 		}
 
-		uint8_t coeff = gf256_mul[data[*i]][gf256_inverse[gf256_polycalc(poly, i_size, *i)]];
+		uint8_t coeff = gf256_mul[data[*i * frame_size]][gf256_inverse[gf256_polycalc(poly, i_size, *i)]];
 
 		for (uint8_t j = i_size; j--;) {
 			out[j] ^= gf256_mul[coeff][poly[j]];

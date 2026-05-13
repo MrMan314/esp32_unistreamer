@@ -73,9 +73,11 @@ int main() {
 
 	printf("#ifndef INCLUDE_GF256TABLE_H\n#define INCLUDE_GF256TABLE_H\n#define MODULUS %d\n#include <stdint.h>\nconst uint8_t gf256_mul[256][256]={", modulus);
 	for (int i = 0; i < 256; i++) {
+		printf("{");
 		for (int j = 0; j < 256; j++) {
-			printf("%d,", gf256_mul(i, j) % 256);
+			printf(j == 255 ? "%d" : "%d,", gf256_mul(i, j) % 256);
 		}
+		printf(i == 255 ? "}" : "},");
 	}
 	printf("};\nconst uint8_t gf256_inverse[256]={");
 	for (int i = 0; i < 256; i++) {
@@ -83,7 +85,7 @@ int main() {
 		for (; j < 256; j++) {
 			if (gf256_mul(i, j) == 1) break;
 		}
-		printf("%d,", j);
+		printf(i == 255 ? "%d" : "%d,", j % 256);
 	}
 	printf("};\n#endif\n");
 
