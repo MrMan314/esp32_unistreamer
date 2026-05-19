@@ -13,7 +13,7 @@ char packet_valid = 0;
 uint8_t *buf, *buf_ptr, *prev_buf;
 int frag_count;
 
-#define LOG_MODE_CSV
+#define LOG_MODE_HUMAN
 
 #ifdef LOG_MODE_HUMAN
 #define LOG_ERROR_RATE(i, recv, total) fprintf(stderr, "%d broken (%d/%d)\n", i, recv, total);
@@ -27,7 +27,7 @@ int frag_count;
 #endif
 
 void packet_handler(unsigned char *args, const struct pcap_pkthdr *header, const unsigned char *packet_ptr) {
-	packet_t *packet = (packet_t*) (packet_ptr + 18);
+	packet_t *packet = (packet_t*) (packet_ptr + 0x15);
 	if (!strncmp(target_mac, packet->packet_header.header.dest_addr, sizeof(target_mac))) {
 		int cur_seq = packet->packet_header.header.seq_ctrl.sequence;
 		int cur_frag = packet->packet_header.header.seq_ctrl.fragment;
@@ -69,7 +69,13 @@ void packet_handler(unsigned char *args, const struct pcap_pkthdr *header, const
 		prev_seq = cur_seq;
 		prev_frag = cur_frag;
 		prev_size = cur_size;
-	}
+	} /*else {
+		for (int i = 0; i < 64; i++) {
+			printf(i % 16 ? "%02x " : "\n%02x ", packet_ptr[i + 0x15]);
+		}
+
+		putchar(10);
+	}*/
 }
 
 int main(int argc, char** argv) {

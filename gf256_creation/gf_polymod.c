@@ -4,7 +4,7 @@
 #define BIG_BIT_COUNT 16
 #define BIT_COUNT 8
 
-const uint16_t modulus = 0x11b;
+const uint16_t modulus = 0x11D;
 
 void print_poly(uint16_t);
 
@@ -69,17 +69,11 @@ uint8_t gf_mul_chatgpt(uint8_t a, uint8_t b) {
     return res;
 }
 
+uint8_t exp2[256];
+
 int main() {
 
-	printf("#ifndef INCLUDE_GF256TABLE_H\n#define INCLUDE_GF256TABLE_H\n#define MODULUS %d\n#include <stdint.h>\nconst uint8_t gf256_mul[256][256]={", modulus);
-	for (int i = 0; i < 256; i++) {
-		printf("{");
-		for (int j = 0; j < 256; j++) {
-			printf(j == 255 ? "%d" : "%d,", gf256_mul(i, j) % 256);
-		}
-		printf(i == 255 ? "}" : "},");
-	}
-	printf("};\nconst uint8_t gf256_inverse[256]={");
+	printf("#ifndef INCLUDE_GF256TABLE_H\n#define INCLUDE_GF256TABLE_H\n#define MODULUS %d\n#include <stdint.h>\nconst uint8_t gf256_inverse[256]={", modulus);
 	for (int i = 0; i < 256; i++) {
 		int j = 0;
 		for (; j < 256; j++) {
@@ -87,6 +81,21 @@ int main() {
 		}
 		printf(i == 255 ? "%d" : "%d,", j % 256);
 	}
-	printf("};\n#endif\n");
+	printf("};\nconst uint8_t gf256_exp2[256]={");
+	uint8_t exp = 1;
+	for(int i = 0; i < 256; i++) {
+		exp2[i] = exp;
+		printf(i == 255 ? "%d" : "%d,", exp);
+		exp = gf256_mul(exp, 2);
+	}
+	printf("};\nconst uint8_t gf256_log2[256]={");
+	for(int i = 0; i < 256; i++) {
+		int j = 0;
+		for (; j < 256; j++) {
+			if (exp2[j] == i) break;
+		}
+		printf(i == 255 ? "%d" : "%d,", j % 256);
+	}
+	printf("};\n#endif");
 
 }

@@ -197,7 +197,8 @@ void app_main(void)
 
 	ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &ap_config));
 
-	ESP_ERROR_CHECK(esp_wifi_config_80211_tx_rate(WIFI_IF_AP, WIFI_PHY_RATE_24M));
+	ESP_ERROR_CHECK(esp_wifi_config_80211_tx_rate(WIFI_IF_AP, WIFI_PHY_RATE_MCS3_LGI));
+	ESP_ERROR_CHECK(esp_wifi_set_bandwidth(WIFI_IF_AP, WIFI_BW20));
 /** this code fails for some reason...
 	wifi_tx_rate_config_t tx_rate_config = {
 		.phymode = WIFI_PHY_MODE_HT40,
@@ -267,7 +268,7 @@ void app_main(void)
 			uint8_t poly[n_packets];
 			gf_polyreg(pic->buf + i, n_packets, poly, DATA_SIZE);
 			for (int j = 0; j < n_parity; j++) {
-				parity_data[DATA_SIZE * j + i] = gf256_polycalc(poly, n_packets, j + n_packets);
+				parity_data[DATA_SIZE * j + i] = gf256_polycalc_exp2(poly, n_packets, j + n_packets);
 			}
 		}
 
